@@ -12,15 +12,6 @@ import org.testcontainers.containers.Network;
 import utils.HttpUtils;
 import java.io.IOException;
 
-/**
- * in order to run this test you need to get the user-mngmnt-api docker image.
- * can be downloaded from https://github.com/dotanraz/users-management-api
- *
- * The test is interacting with the user-management-api.
- * for that it runs a postgres db container, then the user-management-api container.
- * once both containers are up the test is interacting with the api -
- * add new user and get all users.
- */
 public class UsersManagementApiTest {
     GenericContainer usersContainer;
     GenericContainer postgresContainer;
@@ -37,9 +28,9 @@ public class UsersManagementApiTest {
 
         Thread.sleep(10000); //wait for postgres to be ready for connections
 
-        usersContainer = new GenericContainer("user-mngmnt-api")
+        usersContainer = new GenericContainer("theswdeveloper/user-mngmnt-api")
                 .withNetwork(network)
-                .withNetworkAliases("users")
+                .withNetworkAliases("usersApi")
                 .withExposedPorts(8080)
                 .withEnv("postgres_ip", "postgres");
         usersContainer.start();
@@ -55,11 +46,11 @@ public class UsersManagementApiTest {
     public void addNewUser() throws IOException {
         String userJson = "{\"firstName\":\"jon\",\"lastName\":\"dao\"}";
 
-        String addUserPath = "http://localhost:" + usersContainer.getMappedPort(8080) + "/api/v1/users";
+        String addUserPath = "http://localhost:" + usersContainer.getMappedPort(8080) + "/api/v1/addUser";
         CloseableHttpResponse response = HttpUtils.httpPostWithBody(addUserPath, userJson);
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
 
-        String getUsersPath = "http://localhost:" + usersContainer.getMappedPort(8080) + "/api/v1/users";
+        String getUsersPath = "http://localhost:" + usersContainer.getMappedPort(8080) + "/api/v1/getAllUsers";
         CloseableHttpResponse getUsersResponse = HttpUtils.httpGetRequest(getUsersPath);
         String users = HttpUtils.httpResponseToString(getUsersResponse);
         System.out.println("got response:\n" + users);
